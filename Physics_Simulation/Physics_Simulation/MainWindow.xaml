@@ -5,8 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Physics_Simulation"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="350" Width="525">
 
-    </Grid>
-</Window>
+   
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Vertical" Grid.Column="0">
+                <Button Content="Grawitacja" Click="Gravity_Click"/>
+                <Button Content="Tarcie" Click="Friction_Click"/>
+                <!-- Dodaj tutaj inne przyciski -->
+            </StackPanel>
+
+            <Canvas Name="myCanvas" Background="LightBlue" Grid.Column="1" MouseMove="MyCanvas_MouseMove" MouseLeftButtonDown="MyCanvas_MouseLeftButtonDown" MouseLeftButtonUp="MyCanvas_MouseLeftButtonUp">
+                <Ellipse Name="myEllipse" Width="50" Height="50" Fill="Black"/>
+            </Canvas>
+        </Grid>
+    </Window>
