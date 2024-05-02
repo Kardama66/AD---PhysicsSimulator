@@ -30,12 +30,13 @@ namespace Physics_Simulation
             Radius = radius; // Inicjalizujemy promień
         }
 
-        public void ApplyForce(Vector force)
+        public void ApplyForce(Vector force, Func<Vector, Vector> limitSpeedFunc)
         {
             if (IsDragging)
             {
                 Vector acceleration = force / Mass;
                 Velocity += acceleration;
+                Velocity = limitSpeedFunc(Velocity);
             }
         }
 

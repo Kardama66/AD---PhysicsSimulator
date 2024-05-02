@@ -17,11 +17,21 @@
             <StackPanel Orientation="Vertical" Grid.Column="0">
                 <Button Content="Grawitacja" Click="Gravity_Click"/>
                 <Button Content="Tarcie" Click="Friction_Click"/>
-                <!-- Dodaj tutaj inne przyciski -->
-            </StackPanel>
+            <Button Content="Metal" Click="Metal_Click" />
+            <Button Content="Rubber" Click="Rubber_Click" />
+            <Button Content="Wood" Click="Wood_Click" />
+            <Button Content="Stone" Click="Stone_Click" />
+            <Button Content="Plastic" Click="Plastic_Click" />
+        </StackPanel>
 
-            <Canvas Name="myCanvas" Background="LightBlue" Grid.Column="1" MouseMove="MyCanvas_MouseMove" MouseLeftButtonDown="MyCanvas_MouseLeftButtonDown" MouseLeftButtonUp="MyCanvas_MouseLeftButtonUp">
-                <Ellipse Name="myEllipse" Width="50" Height="50" Fill="Black"/>
-            </Canvas>
-        </Grid>
+        <Canvas Name="myCanvas" Background="LightBlue" 
+    MouseMove="MyCanvas_MouseMove" 
+    MouseLeftButtonDown="MyCanvas_MouseLeftButtonDown" 
+    MouseLeftButtonUp="MyCanvas_MouseLeftButtonUp" Grid.Column="1">
+
+            <Ellipse Name="myEllipse" Width="50" Height="50" Fill="Black"/>
+
+        </Canvas>
+
+    </Grid>
     </Window>
