@@ -19,9 +19,11 @@
                 <Button Content="Tarcie" Click="Friction_Click"/>
             <Button Content="Metal" Click="Metal_Click" />
             <Button Content="Rubber" Click="Rubber_Click" />
-            <Button Content="Wood" Click="Wood_Click" />
+            <Button Content="Ice" Click="Ice_Click" />
             <Button Content="Stone" Click="Stone_Click" />
             <Button Content="Plastic" Click="Plastic_Click" />
+            <TextBlock Name="velocityDisplay" Text="Prędkość: 0" Margin="10" />
+            <TextBlock Name="massDisplay" Text="Masa: 0" Margin="10" />
         </StackPanel>
 
         <Canvas Name="myCanvas" Background="LightBlue" 

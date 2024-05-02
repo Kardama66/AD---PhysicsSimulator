@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Shapes;
 
@@ -10,40 +6,44 @@ namespace Physics_Simulation
 {
     public class Ball
     {
-        public double Mass { get; set; }
-        public Vector Velocity { get; set; }
-        public Point Position { get; set; }
-        public Point TargetPosition { get; set; }
-        public Vector MouseOffset { get; set; }
-        public Vector LastForce { get; set; }
-        public double Radius { get; private set; }
+        public Vector Velocity { get; set; } // Prędkość piłki
+        public Point Position { get; set; } // Aktualna pozycja piłki
+        public Point TargetPosition { get; set; } // Cel dla piłki
+        public Vector MouseOffset { get; set; } // Przesunięcie myszy względem piłki
+        public double Radius { get; private set; } // Promień piłki
 
-        public Vector LastVelocity { get; set; }
+        public Material CurrentMaterial { get; set; } // Aktualny materiał piłki
+        public bool IsDragging { get; set; } // Czy piłka jest przeciągana
 
-        public bool IsDragging { get; set; }
-        public Ball(double mass, Point initialPosition, double radius)
+        public Ball(Material initialMaterial, Point initialPosition, double radius)
         {
-            Mass = mass;
-            Position = initialPosition;
-            Velocity = new Vector(0, 0);
-            TargetPosition = initialPosition;
-            Radius = radius; // Inicjalizujemy promień
+            CurrentMaterial = initialMaterial; // Ustaw materiał
+            Position = initialPosition; // Ustaw pozycję
+            Velocity = new Vector(0, 0); // Początkowa prędkość
+            Radius = radius; // Ustaw promień piłki
         }
 
+        public double Mass
+        {
+            get { return CurrentMaterial.Mass; } // Pobierz masę z bieżącego materiału
+        }
+
+        // Dodawanie siły do prędkości piłki
         public void ApplyForce(Vector force, Func<Vector, Vector> limitSpeedFunc)
         {
-            if (IsDragging)
+            Vector acceleration = force / Mass; // Oblicz przyspieszenie
+            Velocity += acceleration; // Dodaj przyspieszenie do prędkości
+
+            if (limitSpeedFunc != null)
             {
-                Vector acceleration = force / Mass;
-                Velocity += acceleration;
-                Velocity = limitSpeedFunc(Velocity);
+                Velocity = limitSpeedFunc(Velocity); // Ogranicz prędkość
             }
         }
 
+        // Przesuwanie piłki
         public void Move()
         {
             Position = new Point(Position.X + Velocity.X, Position.Y + Velocity.Y);
         }
     }
 }
-

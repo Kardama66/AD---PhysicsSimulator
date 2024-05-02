@@ -2,37 +2,37 @@
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Physics_Simulation
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Główne okno aplikacji symulującej fizykę.
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Ball ball;
-        private Point lastMousePosition;
-        private DispatcherTimer timer; // Nowy timer
-        private int tickCounter = 0;
+        private Ball ball; // Instancja piłki
+        private Point lastMousePosition; // Ostatnia pozycja myszy
+        private DispatcherTimer timer; // Timer do obsługi animacji
+        private int tickCounter = 0; // Licznik tików, używany do optymalizacji
+        private bool isFrictionEnabled = false; // Flaga kontrolująca, czy tarcie jest włączone
+        private const double Gravity = 3; // Stała grawitacji
+        private bool isGravityEnabled = false; // Flaga kontrolująca, czy grawitacja jest włączona
         private readonly Point startPosition = new Point(50, 50); // Pozycja startowa piłki
-        Material metal = new Material("Metal", Colors.Gray, 0.5, 0.2);
-        Material rubber = new Material("Rubber", Colors.Red, 1.2, 0.8);
-        Material wood = new Material("Wood", Colors.Brown, 0.7, 0.5);
-        Material stone = new Material("Stone", Colors.Gray, 0.4, 0.3);
-        Material plastic = new Material("Plastic", Colors.Blue, 0.6, 0.4);
-        private Material currentMaterial;
+
+        // Definicje materiałów
+        Material metal = new Material("Metal", Colors.Gray, 0.5, 0.05, 7.5);
+        Material rubber = new Material("Rubber", Colors.Red, 1.1, 0.1, 1.3);
+        Material ice = new Material("Ice", Colors.White, 0.7, 0.001, 0.9);
+        Material stone = new Material("Stone", Colors.DarkGray, 0.4, 0.09, 2.5);
+        Material plastic = new Material("Plastic", Colors.Blue, 0.6, 0.08, 1.07);
+
+        private Material currentMaterial; // Aktualny materiał używany przez piłkę
         private const double MaxSpeed = 10.0; // Maksymalna prędkość w dowolnym kierunku
 
-
+        // Ograniczanie prędkości
         private Vector LimitSpeed(Vector velocity)
         {
             double x = Math.Max(Math.Min(velocity.X, MaxSpeed), -MaxSpeed); // Ogranicz prędkość X
@@ -40,25 +40,65 @@ namespace Physics_Simulation
             return new Vector(x, y);
         }
 
+        // Obsługa zdarzenia Timer_Tick
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (!ball.IsDragging)
+            if (!ball.IsDragging) // Jeśli piłka nie jest przeciągana
             {
-                ball.Move(); // Przesuń piłkę zgodnie z jej prędkością
-
-                tickCounter++;
-                if (tickCounter % 3 == 0) // Sprawdź kolizje co drugi tik
+                // Jeśli prędkość jest bardzo mała, zatrzymaj piłkę
+                if (ball.Velocity.Length < 0.01)
                 {
-                    CheckForCollision();
+                    ball.Velocity = new Vector(0, 0);
                 }
+                else
+                {
+                    // Przesuń piłkę
+                    ball.Move();
+
+                    // Aktualizuj wyświetlacz prędkości
+                    velocityDisplay.Text = $"Prędkość: {ball.Velocity.Length:F2}";
+
+                    // Zastosuj grawitację, jeśli jest włączona
+                    if (isGravityEnabled)
+                    {
+                        double increment = 0.1 * Gravity * ball.Mass; // Siła grawitacji dodawana stopniowo
+                        Vector gravityForce = new Vector(0, increment); // Siła skierowana w dół
+                        ball.ApplyForce(gravityForce, LimitSpeed);
+
+                        // Dodaj tarcie, jeśli piłka jest na ziemi
+                        if (IsOnGround())
+                        {
+                            Vector groundFriction = -currentMaterial.Friction * ball.Velocity;
+                            ball.ApplyForce(groundFriction, LimitSpeed);
+                        }
+                    }
+
+                    tickCounter++;
+                    if (tickCounter % 3 == 0) // Sprawdź kolizje co trzeci tik
+                    {
+                        CheckForCollision();
+
+                        // Zastosuj tarcie, jeśli jest włączone
+                        if (isFrictionEnabled)
+                        {
+                            Vector friction = -currentMaterial.Friction * ball.Velocity;
+                            ball.ApplyForce(friction, LimitSpeed);
+                        }
+                    }
+                }
+
+                // Aktualizacja pozycji piłki
                 myEllipse.Margin = new Thickness(ball.Position.X, ball.Position.Y, 0, 0);
             }
         }
 
+        // Funkcja sprawdzająca, czy piłka jest na ziemi
+        private bool IsOnGround()
+        {
+            return ball.Position.Y + myEllipse.Height >= myCanvas.ActualHeight;
+        }
 
-
-
-
+        // Sprawdź kolizje i dostosuj prędkość po odbiciu
         private void CheckForCollision()
         {
             double canvasWidth = myCanvas.ActualWidth;
@@ -98,31 +138,38 @@ namespace Physics_Simulation
 
             if (ball.Position.Y + myEllipse.Height >= canvasHeight)
             {
+                if (isGravityEnabled)
+                {
+                    restitution -= 0.1; // Zmniejsz współczynnik odbicia, aby piłka traciła prędkość
+                }
                 ball.Velocity = LimitSpeed(new Vector(
                     ball.Velocity.X,
-                    -Math.Abs(ball.Velocity.Y) * restitution
+                    -Math.Abs(ball.Velocity.Y) * (restitution)
                 ));
                 ball.Position = new Point(ball.Position.X, canvasHeight - myEllipse.Height);
+
+                if (ball.Velocity.Length < 0.01)
+                {
+                    ball.Velocity = new Vector(0, 0); // Zatrzymaj piłkę, jeśli prędkość jest bardzo mała
+                }
             }
         }
 
-
-
-
+        // Zdarzenie MouseMove dla przeciągania piłki
         private void MyCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             if (ball.IsDragging)
             {
                 Point currentPosition = e.GetPosition(myCanvas);
-                // Oblicz prędkość na podstawie różnicy między obecnym a ostatnim położeniem
                 Vector movement = currentPosition - lastMousePosition;
-                ball.Velocity = movement; // Ustaw prędkość piłki
-                ball.Position = currentPosition - ball.MouseOffset; // Ustaw pozycję piłki
-                lastMousePosition = currentPosition; // Zaktualizuj ostatnią pozycję myszy
-                myEllipse.Margin = new Thickness(ball.Position.X, ball.Position.Y, 0, 0); // Zaktualizuj pozycję na ekranie
+                ball.Velocity = movement;
+                ball.Position = currentPosition - ball.MouseOffset;
+                lastMousePosition = currentPosition;
+                myEllipse.Margin = new Thickness(ball.Position.X, ball.Position.Y, 0, 0);
             }
         }
 
+        // Zdarzenie MouseLeftButtonDown dla rozpoczęcia przeciągania
         private void MyCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Point clickPosition = e.GetPosition(myCanvas);
@@ -130,95 +177,112 @@ namespace Physics_Simulation
             Point center = new Point(ball.Position.X + radius, ball.Position.Y + radius);
             double distance = Math.Sqrt(Math.Pow(clickPosition.X - center.X, 2) + Math.Pow(clickPosition.Y - center.Y, 2));
 
-            if (distance <= radius) // Jeśli kliknięcie jest wewnątrz piłki
+            if (distance <= radius)
             {
                 ball.IsDragging = true;
-                ball.MouseOffset = clickPosition - ball.Position; // Oblicz przesunięcie względem piłki
-                lastMousePosition = clickPosition; // Zapisz początkową pozycję
-                ball.Velocity = new Vector(0, 0); // Zresetuj prędkość podczas przeciągania
+                ball.MouseOffset = clickPosition - ball.Position;
+                lastMousePosition = clickPosition;
+                ball.Velocity = new Vector(0, 0);
             }
         }
 
-
+        // Zdarzenie MouseLeftButtonUp dla zakończenia przeciągania
         private void MyCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             ball.IsDragging = false;
-            // Gdy puszczamy przycisk myszy, zerujemy przesunięcie myszy
             ball.MouseOffset = new Vector(0, 0);
         }
 
+        // Przełącznik dla grawitacji
         private void Gravity_Click(object sender, RoutedEventArgs e)
         {
-            // Zastosuj siłę grawitacji
-            ball.ApplyForce(new Vector(0, 9.8 * ball.Mass), LimitSpeed);
+            isGravityEnabled = !isGravityEnabled;
+
+            if (isGravityEnabled)
+            {
+                myCanvas.Background = new SolidColorBrush(Colors.LightGray);
+            }
+            else
+            {
+                myCanvas.Background = new SolidColorBrush(Colors.LightBlue);
+            }
         }
 
+        // Przełącznik dla tarcia
         private void Friction_Click(object sender, RoutedEventArgs e)
         {
-            // Zastosuj siłę tarcia
-            Vector friction = 0.1 * ball.Velocity;
-            ball.ApplyForce(-friction, LimitSpeed);
+            isFrictionEnabled = !isFrictionEnabled;
+
+            if (isFrictionEnabled)
+            {
+                myCanvas.Background = new SolidColorBrush(Colors.BurlyWood);
+            }
+            else
+            {
+                myCanvas.Background = new SolidColorBrush(Colors.LightBlue);
+            }
         }
 
+        // Zmiana materiału piłki
         private void ChangeMaterial(Material newMaterial)
         {
             currentMaterial = newMaterial;
 
             // Zresetuj pozycję piłki do startowej
             ball.Position = startPosition;
-            ball.Velocity = new Vector(0, 0); // Zresetuj prędkość
-            myEllipse.Fill = new SolidColorBrush(currentMaterial.Color); // Zmień kolor piłki
+            ball.Velocity = new Vector(0, 0);
+            myEllipse.Fill = new SolidColorBrush(currentMaterial.Color);
+
+            // Aktualizuj informację o masie
+            massDisplay.Text = $"Masa: {currentMaterial.Mass} kg";
 
             myEllipse.Margin = new Thickness(ball.Position.X, ball.Position.Y, 0, 0);
         }
+
+        // Przycisk do zmiany na metal
         private void Metal_Click(object sender, RoutedEventArgs e)
         {
             ChangeMaterial(metal);
         }
 
+        // Przycisk do zmiany na gumę
         private void Rubber_Click(object sender, RoutedEventArgs e)
         {
             ChangeMaterial(rubber);
         }
 
-        private void Wood_Click(object sender, RoutedEventArgs e)
+        // Przycisk do zmiany na lód
+        private void Ice_Click(object sender, RoutedEventArgs e)
         {
-            ChangeMaterial(wood);
+            ChangeMaterial(ice);
         }
 
+        // Przycisk do zmiany na kamień
         private void Stone_Click(object sender, RoutedEventArgs e)
         {
             ChangeMaterial(stone);
         }
 
+        // Przycisk do zmiany na plastik
         private void Plastic_Click(object sender, RoutedEventArgs e)
         {
             ChangeMaterial(plastic);
         }
 
+        // Konstruktor głównego okna
         public MainWindow()
         {
             InitializeComponent();
-            currentMaterial = plastic;
 
-            double radius = myEllipse.Width / 2;
-            ball = new Ball(1.0, new Point(50, 50), radius);
+            ball = new Ball(plastic, startPosition, myEllipse.Width / 2);
             myEllipse.Margin = new Thickness(ball.Position.X, ball.Position.Y, 0, 0);
 
             timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(10); // Zwiększ interwał, aby zmniejszyć obciążenie
-                                                            // Ustawiamy interwał na 20 milisekund
-            timer.Tick += Timer_Tick; // Dodajemy obsługę zdarzenia Tick
-            timer.Start(); // Startujemy timer
+            timer.Interval = TimeSpan.FromMilliseconds(10); // Interwał timera
+            timer.Tick += Timer_Tick;
+            timer.Start();
 
-            
-
+            ChangeMaterial(plastic); // Ustaw domyślny materiał
         }
-
-
-
-
-
-
     }
 }
