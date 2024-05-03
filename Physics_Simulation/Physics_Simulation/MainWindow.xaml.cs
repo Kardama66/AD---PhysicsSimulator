@@ -20,6 +20,15 @@ namespace Physics_Simulation
         private bool isFrictionEnabled = false; // Flaga kontrolująca, czy tarcie jest włączone
         private const double Gravity = 3; // Stała grawitacji
         private bool isGravityEnabled = false; // Flaga kontrolująca, czy grawitacja jest włączona
+        private bool isMagneticAttractionEnabled = false; // Flaga kontrolująca, czy przyciąganie jest włączone
+        private bool isMagneticRepulsionEnabled = false; // Flaga kontrolująca, czy odpychanie jest włączone
+        private DispatcherTimer magneticIndicatorTimer;
+        private Point magneticCenter;
+        private Point canvasCenter; // Środek Canvas
+        private double windStrength = 0.5; // Siła wiatru
+        private DispatcherTimer windArrowTimer;
+        private Vector windForce;
+        private bool isWindEnabled = false;
         private readonly Point startPosition = new Point(50, 50); // Pozycja startowa piłki
 
         // Definicje materiałów
@@ -30,7 +39,7 @@ namespace Physics_Simulation
         Material plastic = new Material("Plastic", Colors.Blue, 0.6, 0.08, 1.07);
 
         private Material currentMaterial; // Aktualny materiał używany przez piłkę
-        private const double MaxSpeed = 10.0; // Maksymalna prędkość w dowolnym kierunku
+        private const double MaxSpeed = 15.0; // Maksymalna prędkość w dowolnym kierunku
 
         // Ograniczanie prędkości
         private Vector LimitSpeed(Vector velocity)
@@ -71,6 +80,33 @@ namespace Physics_Simulation
                             Vector groundFriction = -currentMaterial.Friction * ball.Velocity;
                             ball.ApplyForce(groundFriction, LimitSpeed);
                         }
+                    }
+
+                    if (isWindEnabled)
+                    {
+                        ball.ApplyForce(windForce, LimitSpeed); // Dodaj siłę wiatru
+                    }
+                    if (isMagneticAttractionEnabled)
+                    {
+                        Vector toCenter = magneticCenter - ball.Position;
+                        double distance = toCenter.Length;
+                        double attractionStrength = 0.5;
+                        Vector magneticForce = (toCenter / distance) * attractionStrength;
+                        ball.ApplyForce(magneticForce, LimitSpeed);
+                    }
+
+                    if (isMagneticRepulsionEnabled)
+                    {
+                        Vector toCenter = magneticCenter - ball.Position;
+                        double distance = toCenter.Length;
+                        double repulsionStrength = 0.3;
+                        Vector magneticForce = (toCenter / distance) * -repulsionStrength;
+                        ball.ApplyForce(magneticForce, LimitSpeed);
+                    }
+
+                    if (!isMagneticAttractionEnabled && !isMagneticRepulsionEnabled)
+                    {
+                        magneticIndicator.Opacity = 0; // Ukryj kółko, jeśli magnetyzm jest wyłączony
                     }
 
                     tickCounter++;
@@ -158,6 +194,17 @@ namespace Physics_Simulation
         // Zdarzenie MouseMove dla przeciągania piłki
         private void MyCanvas_MouseMove(object sender, MouseEventArgs e)
         {
+            if (isMagneticAttractionEnabled || isMagneticRepulsionEnabled) // Jeśli magnetyzm jest włączony
+            {
+                Point currentPosition = e.GetPosition(myCanvas); // Pobierz pozycję myszy
+                magneticCenter = currentPosition; // Ustaw nową pozycję magnetycznego centrum
+
+                // Ustawienie położenia wizualizacji kółka
+                magneticIndicator.Margin = new Thickness(currentPosition.X - 5, currentPosition.Y - 5, 0, 0);
+                magneticIndicator.Opacity = 1; // Upewnij się, że kółko jest widoczne
+
+                magneticIndicatorTimer.Start(); // Rozpocznij odliczanie do zniknięcia kółka
+            }
             if (ball.IsDragging)
             {
                 Point currentPosition = e.GetPosition(myCanvas);
@@ -192,6 +239,101 @@ namespace Physics_Simulation
             ball.IsDragging = false;
             ball.MouseOffset = new Vector(0, 0);
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            canvasCenter = new Point(myCanvas.ActualWidth / 2, myCanvas.ActualHeight / 2);
+
+            double angle = 0; // Kąt rotacji strzałki
+            Vector windVector = new Vector(0, 0); // Wektor siły wiatru
+
+            switch (e.Key)
+            {
+                case Key.Up:
+                    angle = 180; // Wiatr w górę
+                    windVector = new Vector(0, -windStrength);
+                    break;
+                case Key.Down:
+                    angle = 0; // Wiatr w dół
+                    windVector = new Vector(0, windStrength);
+                    break;
+                case Key.Left:
+                    angle = 90; // Wiatr w lewo
+                    windVector = new Vector(-windStrength, 0);
+                    break;
+                case Key.Right:
+                    angle = 270; // Wiatr w prawo
+                    windVector = new Vector(windStrength, 0);
+                    break;
+                default:
+                    break;
+            }
+
+            // Rotacja strzałki wiatru
+            windArrow.RenderTransform = new RotateTransform(angle, 0, 0); // Rotacja w określonym kierunku
+            windArrow.Margin = new Thickness(canvasCenter.X, canvasCenter.Y, 0, 0); // Ustaw na środku Canvas
+
+            windForce = windVector; // Zaktualizuj siłę wiatru
+            windArrow.Opacity = 1; // Pokaż strzałkę
+            windArrowTimer.Start(); // Rozpocznij timer do ukrycia strzałki
+        }
+
+
+
+        private void ToggleWind(object sender, RoutedEventArgs e)
+        {
+            isWindEnabled = !isWindEnabled; // Przełącz stan wiatru
+
+            Button windButton = sender as Button; // Pobierz przycisk
+            if (isWindEnabled)
+            {
+                windButton.Content = "Wyłącz Wiatr";
+                windArrow.Opacity = 1; // Pokaż strzałkę
+                ;// Zmień nazwę przycisku
+            }
+            else
+            {
+                windButton.Content = "Włącz Wiatr";
+                windForce = new Vector(0, 0);
+                windArrow.Opacity = 0; // Ukryj strzałkę
+                // Wyłącz wiatr
+            }
+        }
+
+        private void ToggleMagneticAttraction(object sender, RoutedEventArgs e)
+        {
+            isMagneticAttractionEnabled = !isMagneticAttractionEnabled; // Przełącz stan przyciągania
+
+            if (isMagneticAttractionEnabled)
+            {
+                isMagneticRepulsionEnabled = false; // Upewnij się, że odpychanie jest wyłączone
+                magneticIndicator.Opacity = 1; // Pokaż kółko
+                magneticIndicatorTimer.Start(); // Rozpocznij odliczanie do ukrycia kółka
+            }
+            else
+            {
+                magneticIndicator.Opacity = 0; // Ukryj kółko
+                magneticIndicatorTimer.Stop(); // Zatrzymaj odliczanie
+            }
+        }
+
+        private void ToggleMagneticRepulsion(object sender, RoutedEventArgs e)
+        {
+            isMagneticRepulsionEnabled = !isMagneticRepulsionEnabled; // Przełącz stan odpychania
+
+            if (isMagneticRepulsionEnabled)
+            {
+                isMagneticAttractionEnabled = false; // Upewnij się, że przyciąganie jest wyłączone
+                magneticIndicator.Opacity = 1; // Pokaż kółko
+                magneticIndicatorTimer.Start();
+            }
+            else
+            {
+                magneticIndicator.Opacity = 0; // Ukryj kółko
+                magneticIndicatorTimer.Stop();
+            }
+        }
+
 
         // Przełącznik dla grawitacji
         private void Gravity_Click(object sender, RoutedEventArgs e)
@@ -273,7 +415,21 @@ namespace Physics_Simulation
         public MainWindow()
         {
             InitializeComponent();
-
+            // Inicjalizacja timera do animacji magnetycznego kółka
+            magneticIndicatorTimer = new DispatcherTimer();
+            magneticIndicatorTimer.Interval = TimeSpan.FromSeconds(1); // Czas widoczności kółka
+            magneticIndicatorTimer.Tick += (s, e) =>
+            {
+                magneticIndicator.Opacity = 0; // Ukryj kółko po 1 sekundzie
+                magneticIndicatorTimer.Stop(); // Zatrzymaj timer
+            };
+            windArrowTimer = new DispatcherTimer();
+            windArrowTimer.Interval = TimeSpan.FromSeconds(2); // Ukryj strzałkę po 2 sekundach
+            windArrowTimer.Tick += (s, e) =>
+            {
+                windArrow.Opacity = 0; // Ukryj strzałkę
+                windArrowTimer.Stop(); // Zatrzymaj timer
+            };
             ball = new Ball(plastic, startPosition, myEllipse.Width / 2);
             myEllipse.Margin = new Thickness(ball.Position.X, ball.Position.Y, 0, 0);
 

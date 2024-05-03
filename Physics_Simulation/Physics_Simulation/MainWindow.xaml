@@ -7,16 +7,18 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
 
-   
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Vertical" Grid.Column="0">
-                <Button Content="Grawitacja" Click="Gravity_Click"/>
-                <Button Content="Tarcie" Click="Friction_Click"/>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Orientation="Vertical" Grid.Column="0">
+            <Button Content="Grawitacja" Click="Gravity_Click"/>
+            <Button Content="Tarcie" Click="Friction_Click"/>
+            <Button Content="Przyciąganie" Click="ToggleMagneticAttraction" />
+            <Button Content="Odpychanie" Click="ToggleMagneticRepulsion" />
             <Button Content="Metal" Click="Metal_Click" />
             <Button Content="Rubber" Click="Rubber_Click" />
             <Button Content="Ice" Click="Ice_Click" />
@@ -32,8 +34,10 @@
     MouseLeftButtonUp="MyCanvas_MouseLeftButtonUp" Grid.Column="1">
 
             <Ellipse Name="myEllipse" Width="50" Height="50" Fill="Black"/>
+            <Polygon Name="windArrow" Points="0,10 -10,-10 10,-10" Fill="Blue" Opacity="0" />
+            <Ellipse Name="magneticIndicator" Width="10" Height="10" Fill="Orange" Opacity="0" />
 
         </Canvas>
 
     </Grid>
-    </Window>
+</Window>

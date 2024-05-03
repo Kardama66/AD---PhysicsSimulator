@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Physics_Simulation
-build_property.ProjectDir = C:\Users\Sebastian\source\repos\Physics_Simulation\Physics_Simulation\
+build_property.ProjectDir = C:\Users\Sebastian\Desktop\Physics_Simulation\Physics_Simulation\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
