@@ -5,39 +5,102 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Physics_Simulation"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" WindowState="Maximized">
 
+    <Window.Resources>
+        <!-- Definicja stylów dla przycisków -->
+        
+            <Style x:Key="MaterialButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="#FF3F51B5" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Padding" Value="10" />
+                <Setter Property="Margin" Value="5" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="BorderBrush" Value="#FF3F51B5" />
+                <Setter Property="BorderThickness" Value="2" />
+                
+            </Style>
 
-    <Grid>
+            <Style x:Key="ForceButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="#FF4CAF50" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Padding" Value="10" />
+                <Setter Property="Margin" Value="5" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="BorderBrush" Value="#FF4CAF50" />
+                <Setter Property="BorderThickness" Value="2" />
+                
+            </Style>
+
+            <Style x:Key="LabelStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Foreground" Value="Black" />
+                <Setter Property="Margin" Value="10" />
+            </Style>
+        
+    </Window.Resources>
+
+    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <StackPanel Orientation="Vertical" Grid.Column="0">
-            <Button Content="Grawitacja" Click="Gravity_Click"/>
-            <Button Content="Tarcie" Click="Friction_Click"/>
-            <Button Content="Przyciąganie" Click="ToggleMagneticAttraction" />
-            <Button Content="Odpychanie" Click="ToggleMagneticRepulsion" />
-            <Button Content="Metal" Click="Metal_Click" />
-            <Button Content="Rubber" Click="Rubber_Click" />
-            <Button Content="Ice" Click="Ice_Click" />
-            <Button Content="Stone" Click="Stone_Click" />
-            <Button Content="Plastic" Click="Plastic_Click" />
-            <TextBlock Name="velocityDisplay" Text="Prędkość: 0" Margin="10" />
-            <TextBlock Name="massDisplay" Text="Masa: 0" Margin="10" />
-        </StackPanel>
+        <Grid Grid.Column="0" VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
+            <!-- Siły -->
+            <GroupBox Header="Siły" Grid.Row="0">
+                <StackPanel Orientation="Vertical">
+                    <Button Content="Grawitacja" Click="Gravity_Click" Style="{StaticResource ForceButtonStyle}" />
+                    <Button Content="Tarcie" Click="Friction_Click" Style="{StaticResource ForceButtonStyle}" />
+                    <Button Content="Przyciąganie" Click="ToggleMagneticAttraction" Style="{StaticResource ForceButtonStyle}" />
+                    <Button Content="Odpychanie" Click="ToggleMagneticRepulsion" Style="{StaticResource ForceButtonStyle}" />
+                    <Button Content="Wiatr" Click="ToggleWind" Style="{StaticResource ForceButtonStyle}" />
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Materiały -->
+            <GroupBox Header="Materiały" Grid.Row="1">
+                <StackPanel Orientation="Vertical">
+                    <Button Content="Metal" Click="Metal_Click" Style="{StaticResource MaterialButtonStyle}" />
+                    <Button Content="Guma" Click="Rubber_Click" Style="{StaticResource MaterialButtonStyle}" />
+                    <Button Content="Lód" Click="Ice_Click" Style="{StaticResource MaterialButtonStyle}" />
+                    <Button Content="Kamień" Click="Stone_Click" Style="{StaticResource MaterialButtonStyle}" />
+                    <Button Content="Plastik" Click="Plastic_Click" Style="{StaticResource MaterialButtonStyle}" />
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Informacje -->
+            <GroupBox Header="Informacje" Grid.Row="2">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Name="velocityDisplay" Text="Prędkość: 0" Style="{StaticResource LabelStyle}" />
+                    <TextBlock Name="massDisplay" Text="Masa: 0" Style="{StaticResource LabelStyle}" />
+                    <TextBlock Name="forceDisplay" Text="Siła: Brak" Style="{StaticResource LabelStyle}" />
+                    <TextBlock Name="materialDisplay" Text="Materiał: Brak" Style="{StaticResource LabelStyle}" />
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+        <!-- Canvas -->
         <Canvas Name="myCanvas" Background="LightBlue" 
-    MouseMove="MyCanvas_MouseMove" 
-    MouseLeftButtonDown="MyCanvas_MouseLeftButtonDown" 
-    MouseLeftButtonUp="MyCanvas_MouseLeftButtonUp" Grid.Column="1">
+MouseMove="MyCanvas_MouseMove" 
+MouseLeftButtonDown="MyCanvas_MouseLeftButtonDown" 
+MouseLeftButtonUp="MyCanvas_MouseLeftButtonUp" Grid.Column="1">
 
-            <Ellipse Name="myEllipse" Width="50" Height="50" Fill="Black"/>
+            <Ellipse Name="myEllipse" Width="50" Height="50" Fill="Blue"/>
             <Polygon Name="windArrow" Points="0,10 -10,-10 10,-10" Fill="Blue" Opacity="0" />
             <Ellipse Name="magneticIndicator" Width="10" Height="10" Fill="Orange" Opacity="0" />
 
         </Canvas>
-
     </Grid>
+
 </Window>

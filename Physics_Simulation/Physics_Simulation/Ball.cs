@@ -10,7 +10,7 @@ namespace Physics_Simulation
         public Point Position { get; set; } // Aktualna pozycja piłki
         public Point TargetPosition { get; set; } // Cel dla piłki
         public Vector MouseOffset { get; set; } // Przesunięcie myszy względem piłki
-        public double Radius { get; private set; } // Promień piłki
+        public double Radius { get; set; } // Promień piłki
 
         public Material CurrentMaterial { get; set; } // Aktualny materiał piłki
         public bool IsDragging { get; set; } // Czy piłka jest przeciągana
